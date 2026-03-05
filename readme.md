@@ -1,3 +1,5 @@
 2D to 3D video conversion using DIBR methods
 
-Note: because of transformers, must do pip install "numpy<2.0"
+Notes:
+because of transformers, must do pip install "numpy<2.0"
+the depth map depth is actually inversed, with further meaning lower values
