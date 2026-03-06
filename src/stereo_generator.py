@@ -3,36 +3,13 @@ from typing import Tuple
 
 
 class StereoGenerator:
-    """Generate stereo pairs from depth maps"""
     
     def __init__(self, ipd_mm: float = 12.0):
-        """
-        Initialize stereo generator
-        
-        Args:
-            ipd_mm: Interpupillary distance in millimeters (default: 12.0)
-        """
         self.ipd_mm = ipd_mm
         print(f"StereoGenerator initialized with IPD: {ipd_mm}mm")
     
     def calculate_disparity(self, depth: np.ndarray, image_width: int) -> np.ndarray:
-        """
-        Convert depth to disparity
-        
-        Key principle: disparity ∝ depth
-        - depth=1.0 (near) → max disparity
-        - depth=0.0 (far) → zero disparity
-        
-        Args:
-            depth: Normalized depth (0=far, 1=near)
-            image_width: Image width in pixels
-            
-        Returns:
-            Disparity in pixels
-        """
         # Max disparity based on IPD
-        # 12mm IPD → small max disparity (comfortable)
-        # 65mm IPD → larger max disparity (standard)
         max_disparity = (self.ipd_mm / 65.0) * (image_width * 0.05)
         
         # Disparity proportional to depth
@@ -41,16 +18,6 @@ class StereoGenerator:
         return disparity.astype(np.float32)
     
     def shift_image(self, image: np.ndarray, disparity: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """
-        Shift image right based on disparity
-        
-        Args:
-            image: RGB image (H, W, 3)
-            disparity: Disparity map (H, W)
-            
-        Returns:
-            (shifted_image, occlusion_mask)
-        """
         h, w = image.shape[:2]
         
         shifted = np.zeros_like(image, dtype=np.uint8)
@@ -90,19 +57,7 @@ class StereoGenerator:
         
         return shifted, occlusion_mask
     
-    def generate_stereo_pair(self, 
-                            image: np.ndarray, 
-                            depth: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """
-        Generate stereo pair
-        
-        Args:
-            image: RGB image (H, W, 3) uint8
-            depth: Depth map (H, W) float32, [0, 1] where 0=far, 1=near
-            
-        Returns:
-            (left_view, right_view, left_mask, right_mask)
-        """
+    def generate_stereo_pair(self, image: np.ndarray, depth: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         if image.shape[:2] != depth.shape:
             raise ValueError(f"Shape mismatch: image {image.shape[:2]} vs depth {depth.shape}")
         
@@ -118,21 +73,12 @@ class StereoGenerator:
         # Calculate disparity
         disparity = self.calculate_disparity(depth, w)
         
-        print(f"Disparity statistics:")
-        print(f"  Mean: {np.mean(disparity):.2f} pixels")
-        print(f"  Max: {np.max(disparity):.2f} pixels ({np.max(disparity)/w*100:.2f}% of width)")
-        
         # Left = original (no shift, no occlusions)
         left_view = image.copy()
         left_mask = np.zeros((h, w), dtype=np.uint8)
         
         # Right = shifted
         right_view, right_mask = self.shift_image(image, disparity)
-        
-        right_holes = np.sum(right_mask > 0)
-        print(f"Occlusions:")
-        print(f"  Left: 0 pixels (0.00%) - original image")
-        print(f"  Right: {right_holes:,} pixels ({100*right_holes/(h*w):.2f}%)")
         
         return left_view, right_view, left_mask, right_mask
     

@@ -34,7 +34,7 @@ class DepthEstimator:
         print(f"Processing: {image_path.name}")
         image = Image.open(image_path).convert("RGB")
         
-        # Run depth estimation
+        # run depth estimation
         result = self.estimator(image)
         depth = result["depth"]
         
@@ -44,17 +44,12 @@ class DepthEstimator:
         depth_colored = cv2.applyColorMap(depth_normalized, cv2.COLORMAP_INFERNO) # Color map for visualization
         
         output_name = image_path.stem
-        grayscale_path = output_folder / f"{output_name}_depth_gray.png"
-        Image.fromarray(depth_normalized).save(grayscale_path)
-        
-        colored_path = output_folder / f"{output_name}_depth_colored.png"
+        colored_path = output_folder / f"{output_name}_depth.png"
         cv2.imwrite(str(colored_path), depth_colored)
-        
-        raw_path = output_folder / f"{output_name}_depth_raw.npy"
-        np.save(raw_path, depth_array)
+
     
     def estimate(self, image: Union[np.ndarray, Image.Image, Path, str]) -> np.ndarray:
-        # Convert input to PIL Image if needed
+        # Convert input to PIL image if needed
         if isinstance(image, (str, Path)):
             image = Image.open(image).convert("RGB")
         elif isinstance(image, np.ndarray):
@@ -69,20 +64,19 @@ class DepthEstimator:
         depth_max = depth_array.max()
         
         depth_normalized = (depth_array-depth_min)/(depth_max-depth_min) if depth_max-depth_min > 0 else np.zeros_like(depth_array)
-
         return depth_normalized.astype(np.float32)
 
 
 
 def main():
-    input_folder = Path("input")
-    output_folder = Path("output")
+    input_folder = Path("input/images")
+    output_folder = Path("output/images")
     
     output_folder.mkdir(exist_ok=True)
     
     # Check if input folder exists and has images
     if not input_folder.exists():
-        print(f"Error: '{input_folder}' folder not found!")
+        print(f"Error: '{input_folder}' not found.")
         return
     
     # Valid file types
@@ -91,7 +85,7 @@ def main():
                    if f.suffix.lower() in image_extensions]
     
     if not image_files:
-        print(f"No images found in '{input_folder}' folder!")
+        print(f"No images found.")
         return
     
     depth_estimator = DepthEstimator()

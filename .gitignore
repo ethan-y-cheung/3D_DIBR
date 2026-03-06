@@ -2,5 +2,5 @@ __pycache__/
 *.py[cod]
 .Python
 venv/
-input/*
-output/*
+input/
+output/

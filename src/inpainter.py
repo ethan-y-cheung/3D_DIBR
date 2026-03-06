@@ -17,7 +17,6 @@ class Inpainter:
         
         print(f"Inpainter initialized:")
         print(f"  Method: {method}")
-        print(f"  Radius: {radius} pixels")
     
     def inpaint_view(self, image: np.ndarray, mask: np.ndarray) -> np.ndarray:
         # Ensure correct types
