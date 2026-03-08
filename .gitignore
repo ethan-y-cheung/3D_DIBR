@@ -2,5 +2,4 @@ __pycache__/
 *.py[cod]
 .Python
 venv/
-input/*
-output/*
+input/videos/hike.mp4
