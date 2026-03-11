@@ -3,7 +3,7 @@ torchvision>=0.15.0
 transformers>=4.30.0
 opencv-python>=4.7.0
 pillow>=9.0.0
-numpy>=1.24.0
+numpy==1.26.4
 pyyaml>=6.0
 huggingface-hub>=0.14.0
 numba>=0.57.0

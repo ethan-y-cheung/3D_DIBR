@@ -1,5 +1,6 @@
 __pycache__/
 *.py[cod]
 .Python
-venv/
+.venv/
 input/videos/hike.mp4
+output/images

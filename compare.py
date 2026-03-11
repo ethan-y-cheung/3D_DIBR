@@ -4,8 +4,10 @@ from PIL import Image, ImageTk
 root = tk.Tk()
 
 paths = [
-    "output/stereo/woods1_right_ns.png",
-    "output/stereo/woods1_right_telea.png"
+    "input/images/woods1.jpg",
+    "output/stereo/woods1_right.png"
+    # "output/images/dog1_depth.png",
+    # "output/images/dog1_depth_2.png"
 ]
 
 images = [ImageTk.PhotoImage(Image.open(p)) for p in paths]

@@ -15,7 +15,7 @@ class DepthEstimator:
         device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Using {device}.")
 
-        model_id = "depth-anything/Depth-Anything-V2-BASE-hf"  # changeable if base doesn't work
+        model_id = "depth-anything/Depth-Anything-V2-small-hf"  # changeable if base doesn't work
         
         try:
             self.estimator = pipeline(
@@ -38,13 +38,14 @@ class DepthEstimator:
         result = self.estimator(image)
         depth = result["depth"]
         
-        depth_array = np.array(depth)
+        # fixes things, but also maybe makes edges chopped?
+        depth_array = cv2.medianBlur(np.array(depth, dtype=np.float32), 3)
         depth_normalized = ((depth_array - depth_array.min()) / 
                         (depth_array.max() - depth_array.min()) * 255).astype(np.uint8)
         depth_colored = cv2.applyColorMap(depth_normalized, cv2.COLORMAP_INFERNO) # Color map for visualization
         
         output_name = image_path.stem
-        colored_path = output_folder / f"{output_name}_depth.png"
+        colored_path = output_folder / f"{output_name}_depth_mb.png"
         cv2.imwrite(str(colored_path), depth_colored)
 
     
@@ -57,7 +58,7 @@ class DepthEstimator:
         
         result = self.estimator(image)
         depth = result["depth"]
-        depth_array = np.array(depth, dtype=np.float32)
+        depth_array = cv2.medianBlur(np.array(depth, dtype=np.float32), 3) #apply median blur
         
         # Normalize to [0, 1] range
         depth_min = depth_array.min()
