@@ -3,4 +3,5 @@ __pycache__/
 .Python
 .venv/
 input/videos/hike.mp4
-output/images
+output/
+input/videos/

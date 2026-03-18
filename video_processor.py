@@ -16,7 +16,7 @@ def smooth_depth(current_depth, previous_depth, alpha=0.8):
     return (alpha * current_depth + (1 - alpha) * previous_depth).astype(np.float32)
 
 
-def process_video(input_path, output_path, depth_estimator, stereo_generator, inpainter, smooth_alpha=0.8):
+def process_video(input_path, output_path, depth_estimator, stereo_generator, inpainter, output_format, smooth_alpha=0.8):
     print(f"\n{'='*60}")
     print(f"Processing: {input_path.name}")
     print(f"{'='*60}\n")
@@ -63,8 +63,19 @@ def process_video(input_path, output_path, depth_estimator, stereo_generator, in
             # Inpaint
             _, right = inpainter.inpaint_stereo_pair(left, right, left_mask, right_mask)
 
-            right_bgr = cv2.cvtColor(right, cv2.COLOR_RGB2BGR)
-            out.write(right_bgr)
+            if output_format == 'anaglyph':
+                anaglyph = np.zeros_like(right)
+                anaglyph[:, :, 0] = left[:, :, 0]
+                anaglyph[:, :, 1] = right[:, :, 1]
+                anaglyph[:, :, 2] = right[:, :, 2]
+                output = anaglyph
+            elif output_format == 'sbs':
+                output = np.hstack([left, right])
+            else:
+                output = right
+
+            out_bgr = cv2.cvtColor(output, cv2.COLOR_RGB2BGR)
+            out.write(out_bgr)
             
             pbar.update(1)
     
@@ -90,6 +101,8 @@ def parse_args():
                        help='Inpainting method (default: telea)')
     parser.add_argument('--smooth-alpha', type=float, default=0.8,
                        help='Temporal smoothing factor (default: 0.8)')
+    parser.add_argument('--output-format', choices=['right', 'anaglyph', 'sbs'], 
+                       default='right')
     return parser.parse_args()
 
 
@@ -140,7 +153,7 @@ def main():
         try:
             process_video(video_path, output_path, 
                         depth_estimator, stereo_generator, inpainter,
-                        args.smooth_alpha)
+                        args.output_format, args.smooth_alpha)
         except Exception as e:
             print(f"\n✗ Error: {e}")
             import traceback
