@@ -3,6 +3,7 @@ from pathlib import Path
 import numpy as np
 import sys
 import cv2
+import traceback
 from tqdm import tqdm
 
 from src.depth_estimator import DepthEstimator
@@ -35,9 +36,10 @@ def process_video(input_path, output_path, depth_estimator, stereo_generator, in
     print(f"Video: {width}x{height} @ {fps}fps, {total_frames} frames")
     print(f"Temporal smoothing: alpha={smooth_alpha}\n")
     
-    # Create output writer
+    # Create output writer with correct dimensions for the output format
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(str(output_path), fourcc, fps, (width, height))
+    out_width = width * 2 if output_format == 'sbs' else width
+    out = cv2.VideoWriter(str(output_path), fourcc, fps, (out_width, height))
     
     # Process frames with progress bar
     previous_depth = None
@@ -64,13 +66,9 @@ def process_video(input_path, output_path, depth_estimator, stereo_generator, in
             _, right = inpainter.inpaint_stereo_pair(left, right, left_mask, right_mask)
 
             if output_format == 'anaglyph':
-                anaglyph = np.zeros_like(right)
-                anaglyph[:, :, 0] = left[:, :, 0]
-                anaglyph[:, :, 1] = right[:, :, 1]
-                anaglyph[:, :, 2] = right[:, :, 2]
-                output = anaglyph
+                output = stereo_generator.create_anaglyph(left, right)
             elif output_format == 'sbs':
-                output = np.hstack([left, right])
+                output = stereo_generator.create_side_by_side(left, right)
             else:
                 output = right
 
@@ -101,7 +99,11 @@ def parse_args():
                        help='Inpainting method (default: telea)')
     parser.add_argument('--smooth-alpha', type=float, default=0.8,
                        help='Temporal smoothing factor (default: 0.8)')
-    parser.add_argument('--output-format', choices=['right', 'anaglyph', 'sbs'], 
+    parser.add_argument('--inpaint-radius', type=int, default=3,
+                       help='Inpainting radius in pixels (default: 3)')
+    parser.add_argument('--gpu', type=int, default=0,
+                       help='GPU device ID, -1 for CPU (default: 0)')
+    parser.add_argument('--output-format', choices=['right', 'anaglyph', 'sbs'],
                        default='right')
     return parser.parse_args()
 
@@ -123,16 +125,16 @@ def main():
     
     # Initialize components
     print("\nInitializing pipeline components...")
-    depth_estimator = DepthEstimator()
+    depth_estimator = DepthEstimator(model_size=args.depth_model, device=args.gpu)
     stereo_generator = StereoGenerator(ipd_mm=args.ipd)
-    inpainter = Inpainter(method=args.inpaint_method, radius=3)
+    inpainter = Inpainter(method=args.inpaint_method, radius=args.inpaint_radius)
     
     # Get video files
     if input_path.is_file():
         video_files = [input_path]
     elif input_path.is_dir():
         video_extensions = {'.mp4', '.avi', '.mov', '.mkv'}
-        video_files = [f for f in input_path.iterdir() 
+        video_files = [f for f in input_path.iterdir()
                       if f.suffix.lower() in video_extensions]
         if not video_files:
             print(f"\nError: No videos found in {input_path}")
@@ -156,7 +158,6 @@ def main():
                         args.output_format, args.smooth_alpha)
         except Exception as e:
             print(f"\n✗ Error: {e}")
-            import traceback
             traceback.print_exc()
     
     print("\n" + "="*60)

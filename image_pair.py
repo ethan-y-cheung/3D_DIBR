@@ -2,7 +2,9 @@ import argparse
 from pathlib import Path
 import numpy as np
 from PIL import Image
+import cv2
 import sys
+import traceback
 
 from src.depth_estimator import DepthEstimator
 from src.stereo_generator import StereoGenerator
@@ -43,9 +45,15 @@ def process_image(input_path: Path, output_dir: Path, depth_estimator: DepthEsti
     )
     
     # Save outputs
-    output_dir.mkdir(parents=True, exist_ok=True)
+    (output_dir / "stereo").mkdir(parents=True, exist_ok=True)
+    (output_dir / "depth").mkdir(parents=True, exist_ok=True)
     base_name = input_path.stem
-    
+
+    # Save colored depth map
+    depth_colored = cv2.applyColorMap((depth * 255).astype(np.uint8), cv2.COLORMAP_INFERNO)
+    depth_colored = cv2.cvtColor(depth_colored, cv2.COLOR_BGR2RGB)
+    save_image(depth_colored, output_dir / "depth" / f"{base_name}_depth.png")
+
     #save_image(left_final, output_dir / "stereo" / f"{base_name}_left.png")
     save_image(right_final, output_dir / "stereo" / f"{base_name}_right.png")
     
