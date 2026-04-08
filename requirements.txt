@@ -6,4 +6,7 @@ pillow>=9.0.0
 numpy==1.26.4
 huggingface-hub>=0.14.0
 tqdm>=4.65.0
+click>=8.0.0
+rich>=13.0.0
+questionary>=2.0.0
 pytest>=7.0.0
