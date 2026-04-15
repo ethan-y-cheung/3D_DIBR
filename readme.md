@@ -2,6 +2,8 @@
 
 Converts 2D images and videos into stereoscopic 3D using monocular depth estimation and Depth Image-Based Rendering (DIBR).
 
+![Demo](assets/tree.gif)
+
 ---
 
 ## Pipeline
