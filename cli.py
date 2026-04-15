@@ -6,6 +6,9 @@ import warnings
 os.environ['TRANSFORMERS_VERBOSITY'] = 'error'
 os.environ['HF_HUB_DISABLE_PROGRESS_BARS'] = '1'
 os.environ['TOKENIZERS_PARALLELISM'] = 'false'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+os.environ['TF_ENABLE_ONEDNN_OPTS'] = '0'
+os.environ['TF_AUTOGRAPH_VERBOSITY'] = '0'
 warnings.filterwarnings('ignore')
 
 import contextlib
@@ -306,24 +309,31 @@ _MODEL_CACHE: dict = {}
 def _load_pipeline(cfg: dict):
     cache_key = (cfg['model'], cfg['gpu'])
 
-    with _mute():
-        from src.depth_estimator import DepthEstimator
-        from src.inpainter import Inpainter
-        from src.stereo_generator import StereoGenerator
+    with console.status("", spinner="dots") as status:
+        if cache_key not in _MODEL_CACHE:
+            status.update(f"[bold]Importing modules...[/bold]")
+            with _mute():
+                from src.depth_estimator import DepthEstimator
+                from src.inpainter import Inpainter
+                from src.stereo_generator import StereoGenerator
 
-    if cache_key in _MODEL_CACHE:
-        console.print("[dim]Reusing cached model.[/dim]")
-        de = _MODEL_CACHE[cache_key]
-    else:
-        with console.status("[bold]Loading depth model...[/bold]", spinner="dots"):
+            status.update(f"[bold]Loading DepthAnything-V2-{cfg['model']}...[/bold]")
             with _mute():
                 de = DepthEstimator(model_size=cfg['model'], device=cfg['gpu'])
-        _MODEL_CACHE[cache_key] = de
-        console.print("[green]Model loaded.[/green]")
+            _MODEL_CACHE[cache_key] = de
+            status.stop()
+            console.print("[green]Model loaded.[/green]")
+        else:
+            with _mute():
+                from src.inpainter import Inpainter
+                from src.stereo_generator import StereoGenerator
+            status.stop()
+            console.print("[dim]Reusing cached model.[/dim]")
+            de = _MODEL_CACHE[cache_key]
 
-    with _mute():
-        sg = StereoGenerator(ipd_mm=cfg['ipd'])
-        ip = Inpainter(method=cfg['inpaint_method'], radius=cfg['inpaint_radius'])
+        with _mute():
+            sg = StereoGenerator(ipd_mm=cfg['ipd'])
+            ip = Inpainter(method=cfg['inpaint_method'], radius=cfg['inpaint_radius'])
 
     return de, sg, ip
 

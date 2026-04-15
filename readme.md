@@ -49,50 +49,37 @@ pip install -r requirements.txt
 
 ## Usage
 
-### CLI (recommended)
+### Interactive CLI (recommended)
 
 ```bash
-python cli.py [COMMAND] [OPTIONS] INPUT
+python cli.py
 ```
 
-#### Image conversion
+Launches a fully interactive session. Use arrow keys to navigate menus, Enter to confirm, and type `exit` at any prompt or press `Ctrl+C` to quit.
 
-```bash
-# Single image, default settings
-python cli.py image input/images/dog1.jpg
+**Flow:**
 
-# Directory, large model, anaglyph output
-python cli.py image input/images/ --model large --format anaglyph
+1. Choose **Images** or **Videos**
+2. Enter input path (file or directory)
+3. Choose output directory, model size, output format, and IPD
+4. *(Videos only)* Set temporal smoothing alpha
+5. Optionally configure advanced options (inpaint method, radius, GPU)
+6. Review the settings summary and confirm
+7. Results are saved; the loop returns to step 1 automatically
 
-# Custom IPD, CPU only
-python cli.py image input/images/ --ipd 18 --gpu -1
-```
+**Settings reference:**
 
-#### Video conversion
-
-```bash
-# Single video, default settings
-python cli.py video input/videos/dog1.mp4
-
-# Directory, side-by-side output, less temporal smoothing
-python cli.py video input/videos/ --format sbs --smooth-alpha 0.5
-
-# Anaglyph, large model, specific output directory
-python cli.py video input/videos/hike.mp4 --format anaglyph --model large --output output/hike
-```
-
-#### CLI options
-
-| Option | Default | Description |
+| Setting | Default | Description |
 |---|---|---|
-| `--model` | `base` | DepthAnything-V2 size: `small`, `base`, `large` |
-| `--ipd` | `12.0` | Interpupillary distance in mm |
-| `--format` | `right` | Output format: `right`, `anaglyph`, `sbs` |
-| `--inpaint-method` | `telea` | Inpainting algorithm: `telea`, `ns` |
-| `--inpaint-radius` | `3` | Inpainting radius in pixels |
-| `--gpu` | `0` | GPU device ID; `-1` for CPU |
-| `--output` | `output` | Output directory |
-| `--smooth-alpha` | `0.8` | *(video only)* Temporal smoothing factor (0–1) |
+| Model size | `base` | DepthAnything-V2 size: `small`, `base`, `large` |
+| IPD | `12.0 mm` | Interpupillary distance — controls 3D intensity |
+| Output format | `right` | `right` (right-eye), `anaglyph` (red-cyan), `sbs` (side-by-side) |
+| Smooth alpha | `0.8` | *(videos)* Temporal depth blend — higher = more current frame weight |
+| Inpaint method | `telea` | `telea` (fast) or `ns` (Navier-Stokes, better for large holes) |
+| Inpaint radius | `3` | Inpainting neighbourhood radius in pixels |
+| GPU device | `0` | CUDA device ID; `-1` for CPU |
+
+Loaded models are cached across runs — switching between image and video jobs with the same model/GPU won't reload the weights.
 
 ---
 
