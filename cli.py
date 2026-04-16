@@ -22,7 +22,8 @@ from rich import box
 from rich.console import Console
 from rich.panel import Panel
 from rich.progress import (BarColumn, MofNCompleteColumn, Progress,
-                            SpinnerColumn, TextColumn, TimeElapsedColumn)
+                            SpinnerColumn, TextColumn, TimeElapsedColumn,
+                            TimeRemainingColumn)
 from rich.rule import Rule
 from rich.table import Table
 from rich.text import Text
@@ -168,8 +169,10 @@ def _ask_config(mode: str) -> Optional[dict]:
     _section(f"{mode} — Settings")
 
     # ── Input path ──
+    default_input = 'input/videos/' if is_video else 'input/images/'
     raw = questionary.text(
         "Input path:",
+        default=default_input,
         validate=_vpath,
         style=Q,
     ).ask()
@@ -371,6 +374,8 @@ def _run_images(cfg: dict):
         BarColumn(),
         MofNCompleteColumn(),
         TimeElapsedColumn(),
+        TextColumn("[dim]eta[/dim]"),
+        TimeRemainingColumn(),
         console=console,
     ) as bar:
         task = bar.add_task('', total=len(files), fname='')
@@ -455,6 +460,8 @@ def _run_videos(cfg: dict):
                 BarColumn(),
                 MofNCompleteColumn(),
                 TimeElapsedColumn(),
+                TextColumn("[dim]eta[/dim]"),
+                TimeRemainingColumn(),
                 console=console,
                 transient=True,
             ) as bar:
