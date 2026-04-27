@@ -17,7 +17,9 @@ Uses **DepthAnything-V2** (via HuggingFace Transformers) to predict a per-pixel 
 - GPU (CUDA) or CPU selectable
 
 ### 2. Stereo Generation (DIBR)
-Synthesizes a right-eye view by shifting pixels horizontally according to their depth.
+Synthesizes a **left-eye view** by shifting pixels rightward according to their depth. The synthesized view is paired with the original input (treated as the right/center reference) to form a stereo pair.
+
+> **Why left-eye?** Motion parallax: when a viewpoint shifts leftward, near objects appear to move *rightward* in the frame relative to the background. Disparity in this pipeline is positive (`x_dest = x_src + disparity`), so near pixels shift to the right — geometrically equivalent to the view seen by the **left** eye. To synthesize a right-eye view instead, the disparity sign would be inverted so near pixels shift leftward (the same warping code can produce that view by negating the disparity).
 
 - Disparity = `(ipd / 65mm) × (5% of image width) × depth` — scales shift with IPD relative to average human eye separation
 - Vectorized forward-warping with a NumPy Z-buffer: pixels sorted far→near so foreground objects correctly occlude background
@@ -30,7 +32,7 @@ Fills occlusion holes left by the warping step using OpenCV.
 - **NS** (Navier-Stokes) — slower, better for larger hole regions
 
 ### 4. Output Formats
-- **right** — right-eye view only
+- **right** — synthesized left-eye view only (named `right` for the rightward pixel shift it applies)
 - **anaglyph** — red-cyan composite for standard 3D glasses
 - **sbs** — side-by-side layout for VR headsets and 3D monitors
 
@@ -75,7 +77,7 @@ Launches a fully interactive session. Use arrow keys to navigate menus, Enter to
 |---|---|---|
 | Model size | `base` | DepthAnything-V2 size: `small`, `base`, `large` |
 | IPD | `12.0 mm` | Interpupillary distance — controls 3D intensity |
-| Output format | `right` | `right` (right-eye), `anaglyph` (red-cyan), `sbs` (side-by-side) |
+| Output format | `right` | `right` (synthesized left-eye view), `anaglyph` (red-cyan), `sbs` (side-by-side) |
 | Smooth alpha | `0.8` | *(videos)* Temporal depth blend — higher = more current frame weight |
 | Inpaint method | `telea` | `telea` (fast) or `ns` (Navier-Stokes, better for large holes) |
 | Inpaint radius | `3` | Inpainting neighbourhood radius in pixels |
@@ -131,7 +133,7 @@ Output: `output/video_pair/{name}_right.mp4` (or `_anaglyph`, `_sbs`)
 
 ```
 output/
-├── stereo/       # Stereo images (right view, anaglyph, or SBS)
+├── stereo/       # Stereo images (synthesized left-eye view, anaglyph, or SBS)
 ├── depth/        # Colored depth map visualizations
 └── video_pair/   # Stereo video output
 ```

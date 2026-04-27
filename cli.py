@@ -209,7 +209,7 @@ def _ask_config(mode: str) -> Optional[dict]:
     fmt = questionary.select(
         "Output format:",
         choices=[
-            questionary.Choice("right     — right-eye view",          value="right"),
+            questionary.Choice("right     — synthesized left-eye view", value="right"),
             questionary.Choice("anaglyph  — red-cyan (3D glasses)",   value="anaglyph"),
             questionary.Choice("sbs       — side-by-side",            value="sbs"),
         ],

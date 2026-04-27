@@ -77,11 +77,12 @@ class StereoGenerator:
         # Calculate disparity
         disparity = self.calculate_disparity(depth, w)
 
-        # Left = original (no shift needed, left view is the source image)
+        # Reference view = the source image, unshifted (treated as right/center eye)
         left_view = image.copy()
         left_mask = np.zeros((h, w), dtype=np.uint8)
 
-        # Right = shifted
+        # Synthesized view = source shifted rightward by disparity → left-eye view
+        # (variable retains the name `right_view` for backward compatibility)
         right_view, right_mask = self.shift_image(image, disparity)
 
         return left_view, right_view, left_mask, right_mask
