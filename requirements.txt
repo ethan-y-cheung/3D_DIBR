@@ -9,4 +9,5 @@ tqdm>=4.65.0
 click>=8.0.0
 rich>=13.0.0
 questionary>=2.0.0
+scikit-image>=0.21.0,<0.25
 pytest>=7.0.0
